@@ -1,3 +1,13 @@
+### Clone repository
+
+Clone this repository
+
+`git clone https://github.com/willgeary/GeocodingElPaso`
+
+Change into the main directory
+
+`cd GeocodingElPaso`
+
 ### (Optional) Activate virtual environment
 
 To managage dependencies, activate a virtual environment.
@@ -14,17 +24,9 @@ On Windows:
 
 `.\geocode\Scripts\activate`
 
-### Installation
+### Install requirements
 
-Clone this repository
-
-`git clone https://github.com/willgeary/GeocodingElPaso`
-
-Change into the main directory
-
-`cd GeocodingElPaso`
-
-Install requirements:
+Install requirements with:
 
 `pip install -r requirements.txt`
 
