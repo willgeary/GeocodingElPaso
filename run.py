@@ -192,6 +192,9 @@ if __name__ == "__main__":
     print(output['latitude'].astype(bool).sum(axis=0), "successes")
     print(len(output) - output['latitude'].astype(bool).sum(axis=0), "failures")
 
+    # Remove temp folder
+    shutil.rmtree(os.path.join("temp"))
+
     # Print total time taken
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
