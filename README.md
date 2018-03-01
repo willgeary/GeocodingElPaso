@@ -8,13 +8,13 @@ Change into the main directory:
 
 `cd GeocodingElPaso`
 
-### Activate virtual environment
+### Create virtual environment
 
-To managage dependencies, activate a virtual environment. Note, this requires the [anaconda](https://www.anaconda.com/download/#macos) distribution of python.
+Note, this requires the [anaconda](https://www.anaconda.com/download/#macos) distribution of python.
 
-Create the environment from environment file:
+Create a new environment called geocode:
 
-`conda env create -f environment.yml`
+`conda create --name geocode python=3`
 
 Activate the new environment on Windows:
 
@@ -24,9 +24,21 @@ Activate the new environment on macOS and Linux:
 
 `source activate geocode`
 
-### Instructions
+### Install dependencies
 
-To run the script:
+There are three dependencies that you need to install:
+
+`conda install -c conda-forge geopandas`
+
+`pip install requests`
+
+`pip install tqdm`
+
+### Run the script
+
+Now, you are ready to run the script. Note that this may take 5-6 hours for ~30k addresses.
+
+Run the script with:
 
 `python run.py --input=help_recode_addresses.csv`
 
