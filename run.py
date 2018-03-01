@@ -98,31 +98,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Google Maps Geocoding API Keys (Limit of 2,500 per day per API key)
-    API_KEY_1 = "AIzaSyC38JNiBLk22_l6ipSPlpzpE3x87WTDUns"
-    API_KEY_2 = "AIzaSyC16Xd3E8QPjfrx31CNb_RlQfjd1EQvXE8"
-    API_KEY_3 = "AIzaSyBWtmzJe8BeRf19sv-bON5kGFvICdsgtjA"
-    API_KEY_4 = "AIzaSyBngkQ77FsG2eG9mplhvnveXiNt7H6qcZs"
-    API_KEY_5 = "AIzaSyAKzpANETp99vHLouDTS2zsIaA2buVYKTs"
-    API_KEY_6 = "AIzaSyA5BDmEDF-K4VjLK8oVwG1ABjO1cmcT3PI"
-    API_KEY_7 = "AIzaSyCLQEbzAPBaetUKHUelO4kvzdfR2Ex_OYs"
-    API_KEY_8 = "AIzaSyC5BbEC4hBTtFfAmJ4FTisbTALYSw_vaDI"
-    API_KEY_9 = "AIzaSyBh6nOXpIQK29mu5zVf6tXjqJqamIsYQsc"
-    API_KEY_10 = "AIzaSyCYFRE7kymvsk7B_ge3huU9cSN_nfQdmiA"
-    API_KEY_11 = "AIzaSyBIm7zT0vmSmqMuLu4eEVisXP0nxMP51Gc"
-    API_KEY_12 = "AIzaSyCr7PGl7eSaUai-WjjT30oN9WYTNgooavU"
-    API_KEY_13 = "AIzaSyBLRns3_PvHQokMQ0CvaEXcrfqZmkcB0rY"
-    API_KEY_14 = "AIzaSyCVTNBE5xYIjFr541OnP-_IId8FH-w5FIE"
-    API_KEY_15 = "AIzaSyAHg6FzHny1hEoj2tRp0HKRN9Bim0r1jC8"
-    API_KEY_16 = "AIzaSyDO0Z94mLS2Zp9JAxGzd4qvBYpUqqUtPcY"
-    API_KEY_17 = "AIzaSyAXaxNyclneMUQPF8nxKsjvBbXX3PrU4Cs"
-    API_KEY_18 = "AIzaSyDH5vZ1tmlXws3aej6cXhYswB0s0a-BTT4"
-    API_KEY_19 = "AIzaSyA9_EkymNbrz3vE-hgUDIZyxWXJB6UZyko"
-    API_KEY_20 = "AIzaSyDtn-7TVVn6ChkKZuMSoIPyExe7fqlM1y4"
+    API_KEY_1 = "AIzaSyCx2Jn7-R9ryee50s_1yMln-Neq3N3nyvw"
+    API_KEY_2 = "AIzaSyAKEgh62VAfGj-GzdS5AjQQHsmjX42InRY"
+    API_KEY_3 = "AIzaSyCL_GMWuInCEYLd9ummH_3dumEOoO3RFgE"
+    API_KEY_4 = "AIzaSyDdIYRXXsZ8l3E-f73u7EH3qCtfMY4D-fk"
+    API_KEY_5 = "AIzaSyA4ZdbUnCd-47styTixrQGxlgoC_Wa0ntw"
+    API_KEY_6 = "AIzaSyAGznhayWF9Mnhp6oLDdQGWZxBes2G3wJc"
+    API_KEY_7 = "AIzaSyD1-gEJrKTq8IVXDQCz6L9t4J9oRSDPQqo"
+    API_KEY_8 = "AIzaSyClcx88xA1VubMvTI40G8zj46yjiYAyEZM"
+    API_KEY_9 = "AIzaSyDzYcZSkGF3pAdrN6f5MyaTPQYj1nEr02Y"
+    API_KEY_10 = "AIzaSyCqcZkOuLJTIC888_fmQfMq81avIfoDlaM"
+    API_KEY_11 = "AIzaSyD4jXA9HCp542Oo19afOJbfgQOCWKIPuwg"
+    API_KEY_12 = "AIzaSyDpfCI_nVks137enjcpckb5xb8oag-H9Ew"
+    API_KEY_13 = "AIzaSyC-Cheku3EFj1FK3w95IRH3BP9HyptgpYY"
+    API_KEY_14 = "AIzaSyDKmEmeefMUPeHFeFAsPvRAv81SQJsWXxk"
+    API_KEY_15 = "AIzaSyCoKIdFtCvlJ8uKDrykn4QIbr0OybW88_Y"
+    API_KEY_16 = "AIzaSyA3xUzbHtf1h8iUJv80AtvDcNNKiQc7FAU"
 
     API_KEYS = [API_KEY_1, API_KEY_2, API_KEY_3,  API_KEY_4, API_KEY_5,
                 API_KEY_6, API_KEY_7, API_KEY_8, API_KEY_9, API_KEY_10,
                 API_KEY_11, API_KEY_12, API_KEY_13, API_KEY_14, API_KEY_15,
-                API_KEY_16,API_KEY_17, API_KEY_18, API_KEY_19, API_KEY_20]
+                API_KEY_16]
 
     csvFile = args.input
     df = read_csv(csvFile)
@@ -143,6 +139,12 @@ if __name__ == "__main__":
         API_KEY_NUM = int(count / 2400)
         API_KEY = API_KEYS[API_KEY_NUM]
         data = geocode(address, bbox, API_KEY)
+        if data['status'] == 'OVER_QUERY_LIMIT':
+            print("You have exceeded your daily request quota for this API.")
+            print("Switching to next available API key.")
+            API_KEY_NUM += 1
+            API_KEY = API_KEYS[API_KEY_NUM]
+            data = geocode(address, bbox, API_KEY)
         output = parse_data(data)
         filename = str(count).zfill(8)
         with open(os.path.join("temp", "{}.pickle".format(filename)), 'wb') as f:
