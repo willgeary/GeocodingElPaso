@@ -1,0 +1,203 @@
+
+# coding: utf-8
+
+"""
+Job description:
+I need addresses and cross streets in El Paso, Texas geocoded and matched to their census block groups.
+
+I will provide you with a csv file of addresses and cross streets (no zipcode) that are located in El Paso County, Texas. I need you to return the lat/long of the addresses/cross streets and link the addresses/cross streets to their 2010 U.S. Census block group.
+
+I also require the script you create, along with the readme file.
+
+To the input file (help_recode_address) I would like you to add a variable for the following:
+1. latitude (GCS North America)
+2. longitude
+3. match score
+4. 10 digit geoid for census block group
+
+Please make sure the program you create runs on Windows.
+"""
+
+### Import libraries
+from pandas import read_csv, DataFrame
+import requests
+import censusgeocode as cg
+from tqdm import tqdm
+import pickle
+import os
+import argparse
+from datetime import datetime
+import shutil
+
+## Define functions
+def clean_data(df):
+    """
+    Cleans address csv.
+    """
+    # Combine address_cross, county and state columns into a full_address column.
+    df['full_address'] = df['address_cross'] + ", " + df['county'] + ", " + df['state']
+    # Remove '-1/2' from every full address.
+    df['full_address'] = df['full_address'].apply(lambda x: str(x).replace("-1/2", ""))
+    # Remove specific annotations:
+    annotations = ['**VICIOUS K9**', '***EXPOSURE/VICIOUS ANIMAL BITE***', '**INJURED**']
+    for i in annotations:
+        df['full_address'] = df['full_address'].apply(lambda x: str(x).replace(i, ""))
+    # Replace '/' in full_address column with " and ".
+    df['full_address'] = df['full_address'].apply(lambda x: str(x).replace("/", " and "))
+    return df
+
+def geocode(address, bbox, API_KEY):
+    """
+    Geocodes an address using Google Maps Geocoding API
+    """
+    template = "https://maps.googleapis.com/maps/api/geocode/json?address={}&bounds={},{}|{},{}&key={}"
+    url = template.format(address, bbox[0], bbox[1], bbox[2], bbox[3], API_KEY)
+    response = requests.get(url)
+    data = response.json()
+    return data
+
+def parse_data(data):
+    """
+    Parses Google Maps Geocoding API response for
+    latitude, longitude, location type and calc's match score
+    """
+    try:
+        lat = data['results'][0]['geometry']['location']['lat']
+        lon = data['results'][0]['geometry']['location']['lng']
+        location_type = data['results'][0]['geometry']['location_type']
+        match_score = get_match_score(location_type)
+    except:
+        lat = 0
+        lon = 0
+        match_score = 0
+    return (lat, lon, match_score)
+
+def get_match_score(location_type):
+    """
+    Google Maps Geocoding API v3 does not provide a match score.
+    So, I am using this shortcut found here:
+    https://stackoverflow.com/questions/7474076/does-the-v3-google-maps-geocoding-api-have-a-field-that-represents-accuracy
+    """
+    scores = {
+        "ROOFTOP": 9,
+        "RANGE_INTERPOLATED": 7,
+        "GEOMETRIC_CENTER": 6,
+        "APPROXIMATE": 4
+    }
+    if location_type in scores.keys():
+        score = scores[location_type]
+    else:
+        score = 0
+    return score
+
+
+if __name__ == "__main__":
+    start_time = datetime.now()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", help="Input csv file with addresses")
+    args = parser.parse_args()
+
+    # Google Maps Geocoding API Keys (Limit of 2,500 per day per API key)
+    API_KEY_1 = "AIzaSyC38JNiBLk22_l6ipSPlpzpE3x87WTDUns"
+    API_KEY_2 = "AIzaSyC16Xd3E8QPjfrx31CNb_RlQfjd1EQvXE8"
+    API_KEY_3 = "AIzaSyBWtmzJe8BeRf19sv-bON5kGFvICdsgtjA"
+    API_KEY_4 = "AIzaSyBngkQ77FsG2eG9mplhvnveXiNt7H6qcZs"
+    API_KEY_5 = "AIzaSyAKzpANETp99vHLouDTS2zsIaA2buVYKTs"
+    API_KEY_6 = "AIzaSyA5BDmEDF-K4VjLK8oVwG1ABjO1cmcT3PI"
+    API_KEY_7 = "AIzaSyCLQEbzAPBaetUKHUelO4kvzdfR2Ex_OYs"
+    API_KEY_8 = "AIzaSyC5BbEC4hBTtFfAmJ4FTisbTALYSw_vaDI"
+    API_KEY_9 = "AIzaSyBh6nOXpIQK29mu5zVf6tXjqJqamIsYQsc"
+    API_KEY_10 = "AIzaSyCYFRE7kymvsk7B_ge3huU9cSN_nfQdmiA"
+    API_KEY_11 = "AIzaSyBIm7zT0vmSmqMuLu4eEVisXP0nxMP51Gc"
+    API_KEY_12 = "AIzaSyCr7PGl7eSaUai-WjjT30oN9WYTNgooavU"
+    API_KEY_13 = "AIzaSyBLRns3_PvHQokMQ0CvaEXcrfqZmkcB0rY"
+    API_KEY_14 = "AIzaSyCVTNBE5xYIjFr541OnP-_IId8FH-w5FIE"
+    API_KEY_15 = "AIzaSyAHg6FzHny1hEoj2tRp0HKRN9Bim0r1jC8"
+    API_KEY_16 = "AIzaSyDO0Z94mLS2Zp9JAxGzd4qvBYpUqqUtPcY"
+    API_KEY_17 = "AIzaSyAXaxNyclneMUQPF8nxKsjvBbXX3PrU4Cs"
+    API_KEY_18 = "AIzaSyDH5vZ1tmlXws3aej6cXhYswB0s0a-BTT4"
+    API_KEY_19 = "AIzaSyA9_EkymNbrz3vE-hgUDIZyxWXJB6UZyko"
+    API_KEY_20 = "AIzaSyDtn-7TVVn6ChkKZuMSoIPyExe7fqlM1y4"
+
+    API_KEYS = [API_KEY_1, API_KEY_2, API_KEY_3,  API_KEY_4, API_KEY_5,
+                API_KEY_6, API_KEY_7, API_KEY_8, API_KEY_9, API_KEY_10,
+                API_KEY_11, API_KEY_12, API_KEY_13, API_KEY_14, API_KEY_15,
+                API_KEY_16,API_KEY_17, API_KEY_18, API_KEY_19, API_KEY_20]
+
+    csvFile = args.input
+    df = read_csv(csvFile)
+    df = clean_data(df)
+    addresses = list(df['full_address'])
+
+    # El Paso bounding box to provide bias for geocoding
+    bbox = 31.067051,-107.358398,32.405473,-105.268250
+
+    # Make temporary directory to store serialized files
+    if not os.path.exists("temp"):
+        os.makedirs("temp")
+
+    # Geocode addresses to lat lons and save to temp file
+    count = 0
+    print("Geocoding addresses:")
+    for address in tqdm(addresses):
+        API_KEY_NUM = int(count / 2400)
+        API_KEY = API_KEYS[API_KEY_NUM]
+        data = geocode(address, bbox, API_KEY)
+        output = parse_data(data)
+        filename = str(count).zfill(8)
+        with open(os.path.join("temp", "{}.pickle".format(filename)), 'wb') as f:
+            pickle.dump(output, f, protocol=pickle.HIGHEST_PROTOCOL)
+        count += 1
+
+    # Load those pickle files to a dataframe
+    records = []
+    for i in os.listdir(os.path.join("temp")):
+        with open(os.path.join("temp", i), "rb") as f:
+            record = pickle.load(f)
+            records.append(record)
+    result = DataFrame.from_records(records)
+
+    # Lookup census block group geoids. See here for more info:
+    # https://www.census.gov/geo/reference/geoidentifiers.html
+    census_block_group_geoids = []
+    print("Looking up census block group GeoIDs:")
+    for i in tqdm(result.index):
+        row = result.loc[i]
+        attempts = 0
+        # Sometimes the census.gov API will fail
+        # so try it ten times before giving up
+        while attempts < 10:
+            try:
+                lon = row[1]
+                lat = row[0]
+                res = cg.coordinates(x=lon,y=lat)
+                census_block_geoid = res['2010 Census Blocks'][0]['GEOID']
+                census_block_group_geoid = census_block_geoid[:12]
+                census_block_group_geoids.append(census_block_group_geoid)
+                break
+            except:
+                attempts += 1
+                census_block_group_geoids.append(0)
+
+    # Add the new fields to the dataframe
+    result['geoid'] = census_block_group_geoids
+    df['latitude'] = result[0]
+    df['longitude'] = result[1]
+    df['match_score'] = result[2]
+    df['geoid'] = result['geoid']
+
+    # Save data frame to csv
+    del df['full_address']
+    df.to_csv("output.csv", index=False)
+
+    # Delete temporary serialized files
+    shutil.rmtree(os.path.join("temp"))
+
+    # Print total time taken
+    end_time = datetime.now()
+    duration = end_time - start_time
+    hours = int(duration // 3600)
+    duration = int(duration - (hours * 3600))
+    minutes = int(duration // 60)
+    seconds = int(duration - (minutes * 60))
+    print('%s:%s:%s' % (str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2)))
