@@ -1,24 +1,14 @@
-# Instructions for Windows
+### Setup
 
-`conda create --name geocode python=3`
-
-`conda activate geocode`
-
-`conda install -c conda-forge geopandas`
-
-`pip install requests, tqdm`
-
-### Clone this repository
-
-Clone this repository
+Clone this repository:
 
 `git clone https://github.com/willgeary/GeocodingElPaso`
 
-Change into the main directory
+Change into the main directory:
 
 `cd GeocodingElPaso`
 
-### (Optional) Activate virtual environment
+### Activate virtual environment
 
 To managage dependencies, activate a virtual environment. Note, this requires the [anaconda](https://www.anaconda.com/download/#macos) distribution of python.
 
@@ -32,7 +22,7 @@ Activate the new environment on Windows:
 
 Activate the new environment on macOS and Linux:
 
-`source activate myenv`
+`source activate geocode`
 
 ### Instructions
 
