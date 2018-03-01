@@ -1,4 +1,12 @@
-# Instructions
+# Instructions for Windows
+
+`conda create --name geocode python=3`
+
+`conda activate geocode`
+
+`conda install -c conda-forge geopandas`
+
+`pip install requests, tqdm`
 
 ### Clone this repository
 
