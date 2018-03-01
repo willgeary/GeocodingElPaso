@@ -17,5 +17,3 @@ Install requirements:
 To run the script:
 
 `python run.py --input=help_recode_addresses.csv`
-
-
