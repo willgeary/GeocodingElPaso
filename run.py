@@ -21,13 +21,14 @@ Please make sure the program you create runs on Windows.
 ### Import libraries
 from pandas import read_csv, DataFrame
 import requests
-import censusgeocode as cg
 from tqdm import tqdm
 import pickle
 import os
 import argparse
 from datetime import datetime
 import shutil
+import geopandas as gpd
+from shapely.geometry import Point
 
 ## Define functions
 def clean_data(df):
@@ -134,21 +135,27 @@ if __name__ == "__main__":
 
     # Geocode addresses to lat lons and save to temp file
     count = 0
+    print("")
     print("Geocoding addresses:")
     for address in tqdm(addresses):
-        API_KEY_NUM = int(count / 2400)
-        API_KEY = API_KEYS[API_KEY_NUM]
-        data = geocode(address, bbox, API_KEY)
-        if data['status'] == 'OVER_QUERY_LIMIT':
-            print("You have exceeded your daily request quota for this API.")
-            print("Switching to next available API key.")
-            API_KEY_NUM += 1
+        filename = str(count).zfill(8)
+        if os.path.isfile(os.path.join("temp", "{}.pickle".format(filename))):
+            pass
+        else:
+            API_KEY_NUM = int(count / 2400)
             API_KEY = API_KEYS[API_KEY_NUM]
             data = geocode(address, bbox, API_KEY)
-        output = parse_data(data)
-        filename = str(count).zfill(8)
-        with open(os.path.join("temp", "{}.pickle".format(filename)), 'wb') as f:
-            pickle.dump(output, f, protocol=pickle.HIGHEST_PROTOCOL)
+            if data['status'] == 'OVER_QUERY_LIMIT':
+                print("")
+                print("You have exceeded your daily request quota for this API.")
+                print("Switching to next available API key.")
+                print("")
+                API_KEY_NUM += 1
+                API_KEY = API_KEYS[API_KEY_NUM]
+                data = geocode(address, bbox, API_KEY)
+            output = parse_data(data)
+            with open(os.path.join("temp", "{}.pickle".format(filename)), 'wb') as f:
+                pickle.dump(output, f, protocol=pickle.HIGHEST_PROTOCOL)
         count += 1
 
     # Load those pickle files to a dataframe
@@ -159,47 +166,39 @@ if __name__ == "__main__":
             records.append(record)
     result = DataFrame.from_records(records)
 
-    # Lookup census block group geoids. See here for more info:
-    # https://www.census.gov/geo/reference/geoidentifiers.html
-    census_block_group_geoids = []
-    print("Looking up census block group GeoIDs:")
-    for i in tqdm(result.index):
-        row = result.loc[i]
-        attempts = 0
-        # Sometimes the census.gov API will fail
-        # so try it ten times before giving up
-        while attempts < 10:
-            try:
-                lon = row[1]
-                lat = row[0]
-                res = cg.coordinates(x=lon,y=lat)
-                census_block_geoid = res['2010 Census Blocks'][0]['GEOID']
-                census_block_group_geoid = census_block_geoid[:12]
-                census_block_group_geoids.append(census_block_group_geoid)
-                break
-            except:
-                attempts += 1
-                census_block_group_geoids.append(0)
-
     # Add the new fields to the dataframe
-    result['geoid'] = census_block_group_geoids
     df['latitude'] = result[0]
     df['longitude'] = result[1]
     df['match_score'] = result[2]
-    df['geoid'] = result['geoid']
 
-    # Save data frame to csv
-    del df['full_address']
-    df.to_csv("output.csv", index=False)
+    # Convert dataframe to geodataframe
+    geometry = [Point(xy) for xy in zip(df.longitude, df.latitude)]
+    crs = {'init': 'epsg:4326'}
+    gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
-    # Delete temporary serialized files
-    shutil.rmtree(os.path.join("temp"))
+    # Read in texas census block groups
+    texas_census_block_groups = "texas_census_block_groups.geojson"
+    texas = gpd.read_file(texas_census_block_groups)
+    texas = texas.to_crs({'init': 'epsg:4326'})
+
+    # Spatial join points to texas census block groups
+    output = gpd.sjoin(gdf, texas, how="left", op='intersects')
+    output = output[['counter', 'county', 'state', 'address_cross',
+                    'latitude', 'longitude', 'match_score', 'GEOID']]
+    output.to_csv("output.csv", index=False)
+
+    # Count number of successes and failures
+    print("")
+    print(output['latitude'].astype(bool).sum(axis=0), "successes")
+    print(len(output) - output['latitude'].astype(bool).sum(axis=0), "failures")
 
     # Print total time taken
     end_time = datetime.now()
-    duration = end_time - start_time
+    duration = (end_time - start_time).total_seconds()
     hours = int(duration // 3600)
     duration = int(duration - (hours * 3600))
     minutes = int(duration // 60)
     seconds = int(duration - (minutes * 60))
-    print('%s:%s:%s' % (str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2)))
+    print("")
+    print("Total time taken:",'%s:%s:%s' % (str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2)))
+    print("")
