@@ -1,4 +1,6 @@
-### Clone repository
+# Instructions
+
+### Clone this repository
 
 Clone this repository
 
@@ -10,25 +12,19 @@ Change into the main directory
 
 ### (Optional) Activate virtual environment
 
-To managage dependencies, activate a virtual environment.
+To managage dependencies, activate a virtual environment. Note, this requires the [anaconda](https://www.anaconda.com/download/#macos) distribution of python.
 
-Install virtualenv:
+Create the environment from environment file:
 
-`pip install virtualenv`
+`conda env create -f environment.yml`
 
-On MacOS and Linux:
+Activate the new environment on Windows:
 
-`source geocode/bin/activate`
+`activate geocode`
 
-On Windows:
+Activate the new environment on macOS and Linux:
 
-`.\geocode\Scripts\activate`
-
-### Install requirements
-
-Install requirements with:
-
-`pip install -r requirements.txt`
+`source activate myenv`
 
 ### Instructions
 
