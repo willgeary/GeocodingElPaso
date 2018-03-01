@@ -43,3 +43,9 @@ Run the script with:
 `python run.py --input=help_recode_addresses.csv`
 
 When the script is complete the results will be saved as `output.csv`
+
+### Deactivate virtual environment
+
+When you are done, deactivate the virtual environment with:
+
+`deactivate geocode`
